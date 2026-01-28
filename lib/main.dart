@@ -1,78 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:running_app/screens/activity_screen.dart';
-import 'package:running_app/screens/home_screen.dart';
-import 'package:running_app/screens/history_screen.dart';
+import 'services/gpx_service.dart';
+import 'ui/activity_detail_page.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   initializeDateFormatting('fr_FR', null);
-  runApp(const MainApp());
-}
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  String gpxContent = await rootBundle.loadString('./datas/data_test_running.gpx');
+  final parsedData = GpxService().parseGpx(gpxContent);
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Running App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
-      home: const MainNavigation(),
-    );
-  }
-}
-
-class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
-
-  @override
-  State<MainNavigation> createState() => _MainNavigationState();
-}
-
-class _MainNavigationState extends State<MainNavigation> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ActivityScreen(),
-    const HistoryScreen(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Activité',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'Historique',
-          ),
-        ],
-      ),
-    );
-  }
+  runApp(
+    MaterialApp(
+      theme: ThemeData(primarySwatch: Colors.deepOrange),
+      home: ActivityDetailPage(activity: parsedData.activity),
+    ),
+  );
 }
