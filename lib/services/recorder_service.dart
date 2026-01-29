@@ -113,7 +113,7 @@ class RecorderService extends ChangeNotifier {
     );
 
     // Filtrage basique (Si précision pourrie > 20m, on jette)
-    if (newPoint.accuracy > 20.0) return;
+    if (newPoint.accuracy! > 20.0) return;
 
     // Calcul de distance cumulée
     if (_currentPath.isNotEmpty) {
@@ -128,7 +128,7 @@ class RecorderService extends ChangeNotifier {
     }
 
     _currentPath.add(newPoint);
-    _currentSpeed = newPoint.speed; // Mise à jour vitesse instantanée
+    _currentSpeed = newPoint.speed!; // Mise à jour vitesse instantanée
 
     notifyListeners(); // Mise à jour de la Map et des stats
   }
@@ -144,7 +144,7 @@ class RecorderService extends ChangeNotifier {
   void startSimulation() {
     // 1. Récupération des données brutes
     final route = DataRepository().demoRoute;
-    if (route == null || route.points.isEmpty) {
+    if (route == null || route.points!.isEmpty) {
       print("Erreur: Pas de route de démo chargée");
       return;
     }
@@ -162,17 +162,17 @@ class RecorderService extends ChangeNotifier {
 
     // 2. Le Moteur d'injection de données
     // On prend la liste des points du GPX
-    final pointsIterator = route.points.iterator;
+    final pointsIterator = route.points?.iterator;
 
     // On crée un Timer rapide pour simuler le déplacement
     // Duration(milliseconds: 200) = 5x plus vite que le temps réel (si 1pt/sec)
     // Duration(seconds: 1) = Temps réel
     Timer.periodic(const Duration(milliseconds: 200), (simTimer) {
       // Si l'utilisateur a appuyé sur STOP ou si on est à la fin du fichier
-      if (!_isRecording || !pointsIterator.moveNext()) {
+      if (!_isRecording || !pointsIterator!.moveNext()) {
         simTimer.cancel();
         // Si fin du fichier, on peut arrêter proprement ou laisser tourner le chrono
-        if (!pointsIterator.moveNext() && _isRecording) {
+        if (!pointsIterator!.moveNext() && _isRecording) {
           // Optionnel : auto-stop à la fin
           // stopRecording();
         }
@@ -190,7 +190,7 @@ class RecorderService extends ChangeNotifier {
         accuracy: 5.0, // On simule un GPS parfait
         altitude: trackPoint.altitude,
         heading: 0.0, // Pour l'instant on ne calcule pas le cap
-        speed: trackPoint.speed,
+        speed: trackPoint.speed!,
         speedAccuracy: 0.0,
         altitudeAccuracy: 0.0,
         headingAccuracy: 0.0,

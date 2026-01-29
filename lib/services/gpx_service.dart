@@ -144,7 +144,7 @@ class GpxService {
     );
 
     // 6. Construction de l'objet Route (Lourd)
-    final route = ActivityRoute(activityId: activityId, points: trackPoints);
+    final route = ActivityRoute(activityUuid: activityId, points: trackPoints);
 
     return ParsedActivityData(activity: activity, route: route);
   }

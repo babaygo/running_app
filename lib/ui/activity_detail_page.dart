@@ -20,10 +20,10 @@ class ActivityDetailPage extends StatelessWidget {
 
           Expanded(
             child: ListView.builder(
-              itemCount: activity.splits.length,
+              itemCount: activity.splits?.length,
               itemBuilder: (context, index) {
-                final split = activity.splits[index];
-                return _buildSplitItem(split);
+                final split = activity.splits?[index];
+                return _buildSplitItem(split!);
               },
             ),
           ),
@@ -80,7 +80,7 @@ class ActivityDetailPage extends StatelessWidget {
         ),
       ),
       title: Text("Km ${split.index}"),
-      subtitle: Text("Altitude: ${split.altitude.toStringAsFixed(0)}m"),
+      subtitle: Text("Altitude: ${split.altitude?.toStringAsFixed(0)}m"),
       trailing: Text(
         _formatDuration(split.duration),
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

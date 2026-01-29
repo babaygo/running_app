@@ -35,7 +35,7 @@ void main() {
 
       // Vérification de la cohérence métier
       print('--- RÉSULTATS DU PARSING ---');
-      print('Points trouvés : ${result.route.points.length}');
+      print('Points trouvés : ${result.route.points?.length}');
       print(
         'Distance totale : ${result.activity.distanceMeters.toStringAsFixed(2)} m',
       );
@@ -47,7 +47,7 @@ void main() {
 
       // Vérifions qu'on a bien des splits
       expect(result.activity.splits, isNotEmpty);
-      print('Nombre de splits (km) : ${result.activity.splits.length}');
+      print('Nombre de splits (km) : ${result.activity.splits?.length}');
     });
   });
 }
