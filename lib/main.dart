@@ -1,8 +1,13 @@
+// Imports packages
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+// Import repository
 import 'repositories/data_repository.dart';
+// Imports services
 import 'services/gpx_service.dart';
-// Importe tes futures pages ici
+import 'services/recorder_service.dart';
+// Imports pages
 import 'ui/home_page.dart';
 import 'ui/activity_page.dart';
 import 'ui/history_page.dart';
@@ -15,9 +20,15 @@ void main() async {
     'assets/data_test_running.gpx',
   );
   final parsedData = GpxService().parseGpx(gpxContent);
-  DataRepository().addActivity(parsedData.activity); // On stocke dans le repo
+  DataRepository().addActivity(parsedData.activity);
+  DataRepository().demoRoute = parsedData.route;
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => RecorderService())],
+      child: const MyApp()
+    )
+  );
 }
 
 class MyApp extends StatelessWidget {

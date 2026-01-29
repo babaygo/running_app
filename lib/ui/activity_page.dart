@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:running_app/utils/ui_utils.dart';
+import 'package:provider/provider.dart';
+import '../services/recorder_service.dart';
 import 'dart:math' as math;
 
 class ActivityPage extends StatefulWidget {
@@ -83,147 +85,250 @@ class _ActivityPageState extends State<ActivityPage> {
 
   @override
   Widget build(BuildContext context) {
+    // On récupère l'instance sans écouter pour les appels de méthodes (start/stop)
+    final recorder = Provider.of<RecorderService>(context, listen: false);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Activité"),
+        actions: [
+          // BOUTON DE DEBUG (Simulation)
+          IconButton(
+            icon: const Icon(
+              Icons.science,
+              color: Colors.deepOrange,
+            ), // Icone "Eprouvette"
+            tooltip: "Simuler un parcours (Debug PC)",
+            onPressed: () {
+              recorder.startSimulation();
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
-          FlutterMap(
-            // On lie le contrôleur à la carte
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _center, // Commence à Paris, changera après le GPS
-              initialZoom: 13.0,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-              ),
-            ),
-            children: [
-              // COUCHE 1 : Tuiles LIGHT (Positron)
-              TileLayer(
-                // Positron : Très clair, gris léger, idéal pour superposer des traces colorées
-                urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
-                userAgentPackageName: 'com.example.running_app',
-              ),
+          Consumer<RecorderService>(
+            builder: (context, service, child) {
+              return FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _center,
+                  initialZoom: 15.0,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c'],
+                    userAgentPackageName: 'com.example.running_app',
+                  ),
 
-              // COUCHE 2 : Le Point Bleu (Si on a la position)
-              if (_userPosition != null)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _userPosition!,
-                      width: 120,
-                      height: 120,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (_heading != null)
-                            Transform.rotate(
-                              angle: (_heading! * (math.pi / 180)),
-                              child: SizedBox(
-                                width: 100,
-                                height: 100,
-                                child: CustomPaint(
-                                  painter: BeamPainter(color: Colors.blue),
+                  if (service.currentPath.isNotEmpty)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: service.currentPath
+                              .map((p) => LatLng(p.latitude, p.longitude))
+                              .toList(),
+                          strokeWidth: 4.0,
+                          color: Colors.deepOrange,
+                        ),
+                      ],
+                    ),
+
+                  if (_userPosition != null)
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: _userPosition!,
+                          width: 120,
+                          height: 120,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              if (_heading != null)
+                                Transform.rotate(
+                                  angle: (_heading! * (math.pi / 180)),
+                                  child: SizedBox(
+                                    width: 100,
+                                    height: 100,
+                                    child: CustomPaint(
+                                      painter: BeamPainter(color: Colors.blue),
+                                    ),
+                                  ),
+                                ),
+
+                              Container(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 5,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 5,
-                                ),
-                              ],
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-            ],
+                ],
+              );
+            },
           ),
 
-          // COUCHE 3 : Interface (Reste inchangée)
           Positioned(
             bottom: 30,
             left: 20,
             right: 20,
-            child: Column(
-              children: [
-                // Bouton de recentrage (Petit bonus UX)
-                if (_hasPermission)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: FloatingActionButton.small(
-                        backgroundColor: Colors.white,
-                        child: const Icon(
-                          Icons.my_location,
-                          color: Colors.black,
-                        ),
-                        onPressed: () {
-                          if (_userPosition != null) {
-                            _mapController.move(_userPosition!, 15.0);
-                          }
-                        },
-                      ),
+            child: Consumer<RecorderService>(
+              builder: (context, service, child) {
+                if (!service.isRecording) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 10),
+                      ],
                     ),
-                  ),
-
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 10),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedSport,
+                            items: ["Running", "Cycling", "Swimming"]
+                                .map(
+                                  (v) => DropdownMenuItem(
+                                    value: v,
+                                    child: Text(v),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) =>
+                                setState(() => _selectedSport = v!),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            recorder.startRecording(_selectedSport);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            foregroundColor: Colors.white,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(15),
+                          ),
+                          child: const Text("GO"),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return Column(
                     children: [
-                      DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedSport,
-                          items: ["Running", "Cycling", "Swimming"]
-                              .map(
-                                (v) =>
-                                    DropdownMenuItem(value: v, child: Text(v)),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _selectedSport = v!),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildLiveStat(
+                              "Durée",
+                              _formatDuration(service.currentDuration),
+                            ),
+                            _buildLiveStat(
+                              "Dist (km)",
+                              (service.currentDistance / 1000).toStringAsFixed(
+                                2,
+                              ),
+                            ),
+                            _buildLiveStat(
+                              "Vitesse",
+                              "${(service.currentSpeed * 3.6).toStringAsFixed(1)} km/h",
+                            ),
+                          ],
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          /* TODO Start */
+
+                      GestureDetector(
+                        onLongPress: () {
+                          recorder.stopRecording();
+                          // Optionnel : Naviguer vers le détail ou afficher un SnackBar
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Activité enregistrée !"),
+                            ),
+                          );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          foregroundColor: Colors.white,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(15),
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.red,
+                          child: const Icon(
+                            Icons.stop,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                         ),
-                        child: const Text("GO"),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Appui long pour stopper",
+                        style: TextStyle(
+                          color: Colors.white,
+                          shadows: [Shadow(blurRadius: 2, color: Colors.black)],
+                        ),
                       ),
                     ],
-                  ),
-                ),
-              ],
+                  );
+                }
+              },
             ),
           ),
         ],
       ),
     );
   }
+}
+
+Widget _buildLiveStat(String label, String value) {
+  return Column(
+    children: [
+      Text(
+        value,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Monospace',
+        ),
+      ),
+      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+    ],
+  );
+}
+
+String _formatDuration(Duration d) {
+  String twoDigits(int n) => n.toString().padLeft(2, "0");
+  String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
+  String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
+  return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
 }
