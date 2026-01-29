@@ -100,7 +100,7 @@ class GpxService {
       if ((totalDistance / 1000).floor() >
           ((totalDistance - distDelta) / 1000).floor()) {
         final splitDistance = totalDistance - lastSplitDistance;
-        final splitDuration = time.difference(lastSplitTime!);
+        final splitDuration = time.difference(lastSplitTime);
 
         splits.add(
           Split(
