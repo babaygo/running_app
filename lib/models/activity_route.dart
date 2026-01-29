@@ -1,8 +1,16 @@
-import 'package:running_app/models/trackpoint.dart';
+import 'package:isar/isar.dart';
+import 'trackpoint.dart';
 
+part 'activity_route.g.dart';
+
+@collection
 class ActivityRoute {
-  final String activityId; // Clé étrangère vers l'Activity
-  final List<TrackPoint> points; // La série temporelle lourde
+  Id id = Isar.autoIncrement;
 
-  ActivityRoute({required this.activityId, required this.points});
+  @Index(unique: true, replace: true)
+  String? activityUuid;
+
+  List<TrackPoint>? points;
+
+  ActivityRoute({this.activityUuid, this.points});
 }

@@ -1,30 +1,42 @@
+import 'package:isar/isar.dart';
+
+part 'split.g.dart';
+
+@embedded
 class Split {
-  final int index;
-  final double distanceMeters; // La distance exacte du split (parfois un peu +/- 1000m)
-  final double totalDistance;
-  final Duration duration; // Temps mis pour parcourir ce split
+  int? index;
+  double? distanceMeters;
+  double? totalDistance;
 
-  // Allure moyenne sur ce split (ex: 5:30 min/km)
-  // C'est souvent redondant avec duration si le split fait exactement 1km,
-  // mais utile si le dernier split fait 500m.
-  final Duration pace;
-  final int currentKm;
+  DateTime? completedAt;
+  DateTime? timestamp;
 
-  final double altitude;
-  final double avgAltitude; // Altitude moyenne ou D+ sur ce split
-  final DateTime timestamp;
-  final DateTime completedAt; // Heure de fin du split
+  int? currentKm;
+  double? altitude;
+  double? avgAltitude;
+
+  int? durationMicros;
+  int? paceMicros;
 
   Split({
     required this.index,
     required this.distanceMeters,
     required this.totalDistance,
-    required this.duration,
-    required this.pace,
     required this.avgAltitude,
-    required this.completedAt,
     required this.currentKm,
     required this.altitude,
     required this.timestamp,
-  });
+    required this.completedAt,
+    required Duration? duration,
+    required Duration? pace,
+  }) {
+    if (duration != null) durationMicros = duration.inMicroseconds;
+    if (pace != null) paceMicros = pace.inMicroseconds;
+  }
+
+  @ignore
+  Duration get duration => Duration(microseconds: durationMicros ?? 0);
+
+  @ignore
+  Duration get pace => Duration(microseconds: paceMicros ?? 0);
 }

@@ -1,52 +1,52 @@
-import 'package:running_app/models/split.dart';
+import 'package:isar/isar.dart';
+import 'split.dart';
 
-enum ActivityType { running, cycling, swimming }
+part 'activity.g.dart';
 
+@collection
 class Activity {
-  final String id; // UUID
-  final ActivityType type;
+  Id isarId = Isar.autoIncrement;
 
-  final DateTime startTime;
-  final DateTime endTime;
+  @Index(unique: true, replace: true)
+  String uuid;
 
-  // --- Métriques ---
-  final double distanceMeters;
+  @Enumerated(EnumType.name)
+  ActivityType type;
 
-  // Temps écoulé total (Chrono start -> Chrono stop)
-  final Duration elapsedTime;
+  DateTime startTime;
+  DateTime endTime;
+  double distanceMeters;
+  double elevationGain;
 
-  // Temps en mouvement (Elapsed - temps passé au feu rouge/pauses)
-  // C'est celui-ci qu'on utilise pour calculer l'allure moyenne affichée.
-  final Duration movingTime;
+  int elapsedTimeMicros;
+  int movingTimeMicros;
 
-  // Dénivelé positif cumulé (important pour le trail/vélo)
-  final double elevationGain;
-
-  // --- Relations ---
-
-  // Les splits sont légers, on les garde ici pour l'affichage rapide des graphes
-  final List<Split> splits;
-
-  // CONCEPTEUR NOTE :
-  // La liste des TrackPoints n'est pas ici.
-  // Dans ta BDD NoSQL, tu auras une méthode séparée :
-  // Future<List<TrackPoint>> getRoute() async { ... }
+  List<Split>? splits;
 
   Activity({
-    required this.id,
+    required String id,
     required this.type,
     required this.startTime,
     required this.endTime,
     required this.distanceMeters,
-    required this.elapsedTime,
-    required this.movingTime,
+    required Duration elapsedTime,
+    required Duration movingTime,
     this.elevationGain = 0.0,
-    required this.splits,
-  });
+    this.splits,
+  }) : uuid = id,
+       elapsedTimeMicros = elapsedTime.inMicroseconds,
+       movingTimeMicros = movingTime.inMicroseconds;
 
-  // Calculs dérivés (Getters intelligents)
+  @ignore
+  Duration get elapsedTime => Duration(microseconds: elapsedTimeMicros);
+
+  @ignore
+  Duration get movingTime => Duration(microseconds: movingTimeMicros);
+
   double get avgSpeedKmh {
     if (movingTime.inSeconds == 0) return 0.0;
     return (distanceMeters / 1000) / (movingTime.inSeconds / 3600);
   }
 }
+
+enum ActivityType { running, cycling, swimming }
