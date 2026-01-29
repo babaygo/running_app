@@ -69,33 +69,29 @@ class RecorderService extends ChangeNotifier {
   Future<void> stopRecording() async {
     if (!_isRecording) return;
 
-    // Arrêt des processus
+    // ... arrêt des timers et subscriptions ...
     _positionStream?.cancel();
     _timer?.cancel();
     _isRecording = false;
-    final endTime = DateTime.now();
 
-    // CRÉATION DE L'ACTIVITÉ FINALE
-    // Note: Dans un vrai cas, on gérerait movingTime vs elapsedTime ici
+    // 1. Création de l'objet Activity (Attention aux types int !)
     final newActivity = Activity(
       uuid: _uuid.v4(),
-      type: ActivityType.running, // À rendre dynamique
+      type: ActivityType.running, // À rendre dynamique via ton Dropdown
       startTime: _startTime!,
-      endTime: endTime,
+      endTime: DateTime.now(),
       distanceMeters: _currentDistance,
-      elapsedTimeMicros: _currentDuration.inMicroseconds,
-      movingTimeMicros: _currentDuration.inMicroseconds,
-      splits: [], // Tu peux réutiliser ta logique de splits ici
-      elevationGain: 0, // À calculer si tu as l'altitude
+      elapsedTimeMicros: _currentDuration.inMicroseconds, // .inMicroseconds
+      movingTimeMicros: _currentDuration.inMicroseconds, // .inMicroseconds
+      splits: [], // On gèrera les splits plus tard
     );
 
-    // Sauvegarde via le Repository
-    DataRepository().addActivity(newActivity);
+    // 2. Sauvegarde PERSISTANTE
+    // On passe l'activité ET la liste des points courants
+    await DataRepository().saveActivity(newActivity, _currentPath);
 
-    // Note: On ne sauvegarde pas la "Route" (TrackPoints) dans DataRepository
-    // pour l'instant car ton Repo est en RAM. Mais conceptuellement, c'est ici
-    // que tu sauverais les TrackPoints dans la BDD NoSQL.
-
+    // Nettoyage
+    _resetState();
     notifyListeners();
   }
 
@@ -167,7 +163,7 @@ class RecorderService extends ChangeNotifier {
     // On crée un Timer rapide pour simuler le déplacement
     // Duration(milliseconds: 200) = 5x plus vite que le temps réel (si 1pt/sec)
     // Duration(seconds: 1) = Temps réel
-    Timer.periodic(const Duration(milliseconds: 200), (simTimer) {
+    Timer.periodic(const Duration(milliseconds: 400), (simTimer) {
       // Si l'utilisateur a appuyé sur STOP ou si on est à la fin du fichier
       if (!_isRecording || !pointsIterator!.moveNext()) {
         simTimer.cancel();
@@ -184,13 +180,13 @@ class RecorderService extends ChangeNotifier {
       // 3. Mapping : On transforme ton TrackPoint en Position GPS "Android/iOS"
       // C'est ici qu'on trompe le système
       final mockPosition = Position(
-        longitude: trackPoint.longitude!,
-        latitude: trackPoint.latitude!,
+        longitude: trackPoint.longitude ?? 0.0, // Sécurité null
+        latitude: trackPoint.latitude ?? 0.0,
         timestamp: DateTime.now(),
-        accuracy: 5.0, // On simule un GPS parfait
-        altitude: trackPoint.altitude!,
-        heading: 0.0, // Pour l'instant on ne calcule pas le cap
-        speed: trackPoint.speed!,
+        accuracy: 5.0,
+        altitude: trackPoint.altitude ?? 0.0,
+        heading: 0.0,
+        speed: trackPoint.speed ?? 0.0,
         speedAccuracy: 0.0,
         altitudeAccuracy: 0.0,
         headingAccuracy: 0.0,

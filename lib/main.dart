@@ -13,21 +13,22 @@ import 'ui/activity_page.dart';
 import 'ui/history_page.dart';
 
 void main() async {
+  // Nécessaire pour les appels async avant runApp
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialisation des données (Simulation BDD)
-  final String gpxContent = await rootBundle.loadString(
-    'assets/data_test_running.gpx',
-  );
+  // Initialisation de la BDD (accès disque)
+  await DataRepository().init();
+
+  final String gpxContent = await rootBundle.loadString('assets/data_test_running.gpx');
   final parsedData = GpxService().parseGpx(gpxContent);
-  DataRepository().addActivity(parsedData.activity);
+
   DataRepository().demoRoute = parsedData.route;
 
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => RecorderService())],
-      child: const MyApp()
-    )
+      child: const MyApp(),
+    ),
   );
 }
 
