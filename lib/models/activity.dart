@@ -24,18 +24,16 @@ class Activity {
   List<Split>? splits;
 
   Activity({
-    required String id,
+    required this.uuid,
     required this.type,
     required this.startTime,
     required this.endTime,
     required this.distanceMeters,
-    required Duration elapsedTime,
-    required Duration movingTime,
+    required this.elapsedTimeMicros,
+    required this.movingTimeMicros,
     this.elevationGain = 0.0,
     this.splits,
-  }) : uuid = id,
-       elapsedTimeMicros = elapsedTime.inMicroseconds,
-       movingTimeMicros = movingTime.inMicroseconds;
+  });
 
   @ignore
   Duration get elapsedTime => Duration(microseconds: elapsedTimeMicros);
@@ -43,6 +41,7 @@ class Activity {
   @ignore
   Duration get movingTime => Duration(microseconds: movingTimeMicros);
 
+  @ignore
   double get avgSpeedKmh {
     if (movingTime.inSeconds == 0) return 0.0;
     return (distanceMeters / 1000) / (movingTime.inSeconds / 3600);

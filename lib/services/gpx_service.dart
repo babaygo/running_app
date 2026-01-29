@@ -63,8 +63,8 @@ class GpxService {
       if (prevPoint != null) {
         // Calcul de la distance parcourue depuis le dernier point
         distDelta = _calculateHaversineDistance(
-          prevPoint.latitude,
-          prevPoint.longitude,
+          prevPoint.latitude!,
+          prevPoint.longitude!,
           lat,
           lon,
         );
@@ -72,12 +72,12 @@ class GpxService {
         totalDistance += distDelta;
 
         // Calcul du D+ (Dénivelé positif uniquement)
-        if (alt > prevPoint.altitude) {
-          elevationGain += (alt - prevPoint.altitude);
+        if (alt > prevPoint.altitude!) {
+          elevationGain += (alt - prevPoint.altitude!);
         }
 
         // Calcul vitesse instantanée (m/s) = distance / temps
-        final timeDeltaSeconds = time.difference(prevPoint.timestamp).inSeconds;
+        final timeDeltaSeconds = time.difference(prevPoint.timestamp!).inSeconds;
         if (timeDeltaSeconds > 0) {
           speed = distDelta / timeDeltaSeconds;
         }
@@ -132,13 +132,13 @@ class GpxService {
     final activityId = _uuid.v4();
 
     final activity = Activity(
-      id: activityId,
+      uuid: activityId,
       type: ActivityType.running, // Hardcodé pour le test
       startTime: startTime ?? DateTime.now(),
       endTime: endTime ?? DateTime.now(),
       distanceMeters: totalDistance,
-      elapsedTime: endTime!.difference(startTime!),
-      movingTime: endTime.difference(startTime), // MVP: Moving = Elapsed
+      elapsedTimeMicros: endTime!.difference(startTime!).inMicroseconds,
+      movingTimeMicros: endTime.difference(startTime).inMicroseconds,
       elevationGain: elevationGain,
       splits: splits,
     );

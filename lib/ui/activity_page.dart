@@ -116,7 +116,7 @@ class _ActivityPageState extends State<ActivityPage> {
               // Cas A : On enregistre/simule -> On prend la position du Service
               if (service.isRecording && service.currentPosition != null) {
                 final p = service.currentPosition!;
-                displayPosition = LatLng(p.latitude, p.longitude);
+                displayPosition = LatLng(p.latitude!, p.longitude!);
                 // Optionnel : Si tu veux que la caméra suive le point automatiquement
                 // _mapController.move(displayPosition, _mapController.camera.zoom);
               }
@@ -148,7 +148,7 @@ class _ActivityPageState extends State<ActivityPage> {
                       polylines: [
                         Polyline(
                           points: service.currentPath
-                              .map((p) => LatLng(p.latitude, p.longitude))
+                              .map((p) => LatLng(p.latitude!, p.longitude!))
                               .toList(),
                           strokeWidth: 4.0,
                           color: Colors.deepOrange,

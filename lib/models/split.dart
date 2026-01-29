@@ -19,16 +19,16 @@ class Split {
   int? paceMicros;
 
   Split({
-    required this.index,
-    required this.distanceMeters,
-    required this.totalDistance,
-    required this.avgAltitude,
-    required this.currentKm,
-    required this.altitude,
-    required this.timestamp,
-    required this.completedAt,
-    required Duration? duration,
-    required Duration? pace,
+    this.index,
+    this.distanceMeters,
+    this.totalDistance,
+    this.avgAltitude,
+    this.currentKm,
+    this.altitude,
+    this.timestamp,
+    this.completedAt,
+    Duration? duration,
+    Duration? pace,
   }) {
     if (duration != null) durationMicros = duration.inMicroseconds;
     if (pace != null) paceMicros = pace.inMicroseconds;

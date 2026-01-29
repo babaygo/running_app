@@ -78,13 +78,13 @@ class RecorderService extends ChangeNotifier {
     // CRÉATION DE L'ACTIVITÉ FINALE
     // Note: Dans un vrai cas, on gérerait movingTime vs elapsedTime ici
     final newActivity = Activity(
-      id: _uuid.v4(),
+      uuid: _uuid.v4(),
       type: ActivityType.running, // À rendre dynamique
       startTime: _startTime!,
       endTime: endTime,
       distanceMeters: _currentDistance,
-      elapsedTime: _currentDuration,
-      movingTime: _currentDuration, // MVP simplification
+      elapsedTimeMicros: _currentDuration.inMicroseconds,
+      movingTimeMicros: _currentDuration.inMicroseconds,
       splits: [], // Tu peux réutiliser ta logique de splits ici
       elevationGain: 0, // À calculer si tu as l'altitude
     );
@@ -119,10 +119,10 @@ class RecorderService extends ChangeNotifier {
     if (_currentPath.isNotEmpty) {
       final lastPoint = _currentPath.last;
       final dist = _calculateHaversine(
-        lastPoint.latitude,
-        lastPoint.longitude,
-        newPoint.latitude,
-        newPoint.longitude,
+        lastPoint.latitude!,
+        lastPoint.longitude!,
+        newPoint.latitude!,
+        newPoint.longitude!,
       );
       _currentDistance += dist;
     }
@@ -184,11 +184,11 @@ class RecorderService extends ChangeNotifier {
       // 3. Mapping : On transforme ton TrackPoint en Position GPS "Android/iOS"
       // C'est ici qu'on trompe le système
       final mockPosition = Position(
-        longitude: trackPoint.longitude,
-        latitude: trackPoint.latitude,
+        longitude: trackPoint.longitude!,
+        latitude: trackPoint.latitude!,
         timestamp: DateTime.now(),
         accuracy: 5.0, // On simule un GPS parfait
-        altitude: trackPoint.altitude,
+        altitude: trackPoint.altitude!,
         heading: 0.0, // Pour l'instant on ne calcule pas le cap
         speed: trackPoint.speed!,
         speedAccuracy: 0.0,
