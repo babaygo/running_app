@@ -6,7 +6,7 @@ import 'dart:math'; // Pour Haversine (si tu ne l'as pas mis dans une classe uti
 
 import '../models/activity.dart';
 import '../models/trackpoint.dart';
-import '../models/split.dart'; // Si tu gères les splits en live
+// Si tu gères les splits en live
 import '../repositories/data_repository.dart';
 
 class RecorderService extends ChangeNotifier {
@@ -26,6 +26,8 @@ class RecorderService extends ChangeNotifier {
   double get currentDistance => _currentDistance;
   double get currentSpeed => _currentSpeed;
   List<TrackPoint> get currentPath => _currentPath;
+  TrackPoint? get currentPosition =>
+      _currentPath.isNotEmpty ? _currentPath.last : null;
 
   // --- INTERNES ---
   StreamSubscription<Position>? _positionStream;

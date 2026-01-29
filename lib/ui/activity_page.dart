@@ -109,6 +109,23 @@ class _ActivityPageState extends State<ActivityPage> {
         children: [
           Consumer<RecorderService>(
             builder: (context, service, child) {
+              // LOGIQUE DE DÉCISION DE LA POSITION
+              LatLng? displayPosition;
+              double displayHeading = 0.0;
+
+              // Cas A : On enregistre/simule -> On prend la position du Service
+              if (service.isRecording && service.currentPosition != null) {
+                final p = service.currentPosition!;
+                displayPosition = LatLng(p.latitude, p.longitude);
+                // Optionnel : Si tu veux que la caméra suive le point automatiquement
+                // _mapController.move(displayPosition, _mapController.camera.zoom);
+              }
+              // Cas B : On est au repos -> On prend la position réelle (GPS PC/Tel)
+              else if (_userPosition != null) {
+                displayPosition = _userPosition;
+                displayHeading = _heading ?? 0.0; // La boussole réelle
+              }
+
               return FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
@@ -139,19 +156,19 @@ class _ActivityPageState extends State<ActivityPage> {
                       ],
                     ),
 
-                  if (_userPosition != null)
+                  if (displayPosition != null)
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: _userPosition!,
+                          point: displayPosition,
                           width: 120,
                           height: 120,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              if (_heading != null)
+                              if (displayHeading != 0)
                                 Transform.rotate(
-                                  angle: (_heading! * (math.pi / 180)),
+                                  angle: (displayHeading * (math.pi / 180)),
                                   child: SizedBox(
                                     width: 100,
                                     height: 100,
@@ -173,7 +190,7 @@ class _ActivityPageState extends State<ActivityPage> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black,
                                       blurRadius: 5,
                                     ),
                                   ],
