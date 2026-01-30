@@ -3,7 +3,6 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/activity.dart';
 import '../models/activity_route.dart';
-import '../models/split.dart';
 import '../models/trackpoint.dart';
 
 class DataRepository {

@@ -58,3 +58,5 @@ android/**/build/
 # Keystore (clés de signature)
 *.jks
 *.keystore
+
+.fake
