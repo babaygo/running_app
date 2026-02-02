@@ -13,10 +13,8 @@ import 'ui/activity_page.dart';
 import 'ui/history_page.dart';
 
 void main() async {
-  // Nécessaire pour les appels async avant runApp
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialisation de la BDD (accès disque)
   await DataRepository().init();
 
   final String gpxContent = await rootBundle.loadString('assets/data_test_running.gpx');
@@ -56,9 +54,8 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  int _currentIndex = 0; // L'état : quel onglet est actif ?
+  int _currentIndex = 0;
 
-  // Les 3 pages sont instanciées ici
   final List<Widget> _pages = [
     const HomePage(),
     const ActivityPage(),
@@ -68,13 +65,11 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // On affiche la page correspondant à l'index actuel
       body: _pages[_currentIndex],
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (int index) {
-          // setState dit à Flutter de redessiner le Scaffold avec le nouvel index
           setState(() {
             _currentIndex = index;
           });
