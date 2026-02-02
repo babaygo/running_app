@@ -46,6 +46,14 @@ class Activity {
     if (movingTime.inSeconds == 0) return 0.0;
     return (distanceMeters / 1000) / (movingTime.inSeconds / 3600);
   }
+
+  @ignore
+  double get avgPaceMinPerKm {
+    if (distanceMeters == 0) return 0.0;
+    double totalMinutes = movingTime.inSeconds / 60;
+    double pace = totalMinutes / (distanceMeters / 1000);
+    return pace;
+  }
 }
 
 enum ActivityType { running, cycling, swimming }
