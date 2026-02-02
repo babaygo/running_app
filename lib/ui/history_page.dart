@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/activity.dart';
 import '../repositories/data_repository.dart';
 import 'activity_detail_page.dart';
+import '../widgets/activities_chart.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -62,7 +63,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
             body: TabBarView(
               children: [
-                _StatsTab(activities: activities),
+                StatsTab(activities: activities),
                 _ListTab(activities: activities),
               ],
             ),
@@ -73,123 +74,33 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 }
 
-class _StatsTab extends StatelessWidget {
+class StatsTab extends StatefulWidget {
   final List<Activity> activities;
 
-  const _StatsTab({required this.activities});
+  const StatsTab({super.key, required this.activities});
 
   @override
+  State<StatsTab> createState() => _StatsTabState();
+}
+
+class _StatsTabState extends State<StatsTab> {
+  @override
   Widget build(BuildContext context) {
-    if (activities.isEmpty) {
+    if (widget.activities.isEmpty) {
       return const Center(child: Text("Pas assez de données pour les stats"));
     }
 
-    final totalDist = activities.fold(
-      0.0,
-      (sum, act) => sum + act.distanceMeters,
-    );
-    final totalTime = activities.fold(
-      0,
-      (sum, act) => sum + act.movingTime.inSeconds,
-    );
-    final totalRuns = activities
-        .where((a) => a.type == ActivityType.running)
-        .length;
-    final totalRides = activities
-        .where((a) => a.type == ActivityType.cycling)
-        .length;
-
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildSummaryCard(
-            "Total Distance",
-            "${(totalDist / 1000).toStringAsFixed(1)} km",
-            Icons.map,
-          ),
-          const SizedBox(height: 10),
-          _buildSummaryCard(
-            "Temps Total",
-            _formatDurationGlobal(Duration(seconds: totalTime)),
-            Icons.timer,
-          ),
-
-          const SizedBox(height: 20),
-          const Divider(),
           const SizedBox(height: 20),
 
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatBox(
-                  "Courses",
-                  "$totalRuns",
-                  Icons.directions_run,
-                  Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildStatBox(
-                  "Sorties Vélo",
-                  "$totalRides",
-                  Icons.directions_bike,
-                  Colors.blue,
-                ),
-              ),
-            ],
-          ),
+          ActivitiesChart(activities: widget.activities),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
-  }
-
-  Widget _buildSummaryCard(String title, String value, IconData icon) {
-    return Card(
-      elevation: 3,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.deepOrange.shade100,
-          child: Icon(icon, color: Colors.deepOrange),
-        ),
-        title: Text(title, style: const TextStyle(color: Colors.grey)),
-        subtitle: Text(
-          value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatBox(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 30),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(label, style: TextStyle(color: color)),
-        ],
-      ),
-    );
-  }
-
-  String _formatDurationGlobal(Duration d) {
-    return "${d.inHours}h ${d.inMinutes % 60}m";
   }
 }
 

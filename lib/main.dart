@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 // Import repository
 import 'repositories/data_repository.dart';
 // Imports services
@@ -17,7 +18,11 @@ void main() async {
 
   await DataRepository().init();
 
-  final String gpxContent = await rootBundle.loadString('assets/data_test_running.gpx');
+  await initializeDateFormatting('fr_FR', null);
+
+  final String gpxContent = await rootBundle.loadString(
+    'assets/data_test_running.gpx',
+  );
   final parsedData = GpxService().parseGpx(gpxContent);
 
   DataRepository().demoRoute = parsedData.route;
