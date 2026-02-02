@@ -15,7 +15,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // On lance le chargement des données au démarrage de la page
     _refreshData();
   }
 
@@ -28,36 +27,30 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Bonjour, Athlete")),
       body: FutureBuilder<List<Activity>>(
         future: _activitiesFuture,
         builder: (context, snapshot) {
-          // 1. Cas de chargement
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // 2. Récupération des données brutes
           final allActivities = snapshot.data ?? [];
-
-          // 3. LOGIQUE DE FILTRE : "Cette semaine"
-          // On calcule la date du Lundi de la semaine en cours à 00:00:00
           final now = DateTime.now();
-          // weekday: Lundi = 1, ... Dimanche = 7
-          // Si on est Mercredi (3), on retire 2 jours pour revenir à Lundi
           final startOfWeek = DateTime(
             now.year,
             now.month,
             now.day - (now.weekday - 1),
           );
 
-          // On ne garde que les activités après ce Lundi minuit
           final weeklyActivities = allActivities.where((activity) {
             return activity.startTime.isAfter(startOfWeek);
           }).toList();
 
-          // 4. Calcul des Stats
           final count = weeklyActivities.length;
+          final totalTime = weeklyActivities.fold(
+            0.0,
+            (sum, act) => sum + act.movingTimeMicros,
+          );
           final totalDistance = weeklyActivities.fold(
             0.0,
             (sum, act) => sum + act.distanceMeters,
@@ -69,53 +62,59 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "Cette semaine",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  "Résumé hebdomadaire",
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
 
-                // CARTE DE RÉSUMÉ
                 Card(
-                  color: Colors.deepOrange.shade50,
+                  color: Colors.white,
                   elevation: 2,
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Colonne Nombre
                         Column(
                           children: [
+                            const Text("Activités"),
                             Text(
                               "$count",
                               style: const TextStyle(
-                                fontSize: 30,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.deepOrange,
+                                color: Colors.black,
                               ),
                             ),
-                            const Text("Sorties"),
                           ],
                         ),
-                        // Séparateur vertical visuel
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: Colors.deepOrange.shade200,
-                        ),
 
-                        // Colonne Distance
                         Column(
                           children: [
+                            const Text("Temps"),
                             Text(
-                              (totalDistance / 1000).toStringAsFixed(1),
+                              // Afficher le temps sous ce format : 37 min 4s
+                              "${(totalTime / 60000000).toStringAsFixed(0)}min${((totalTime % 60000000) / 1000000).toStringAsFixed(0)}s",
                               style: const TextStyle(
-                                fontSize: 30,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.deepOrange,
+                                color: Colors.black,
                               ),
                             ),
-                            const Text("km totaux"),
+                          ],
+                        ),
+
+                        Column(
+                          children: [
+                            const Text("Distance"),
+                            Text(
+                              "${(totalDistance / 1000).toStringAsFixed(1)} km",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -125,13 +124,12 @@ class _HomePageState extends State<HomePage> {
 
                 const SizedBox(height: 30),
 
-                // (Optionnel) Ajout d'un message si vide
                 if (count == 0)
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: 20.0),
                       child: Text(
-                        "Pas encore de sport cette semaine.\nAllez, on s'y met !",
+                        "Aucune activité cette semaine.",
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey, fontSize: 16),
                       ),
